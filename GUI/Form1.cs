@@ -11,36 +11,43 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using System.Threading;
+using WinRar_unlocker;
 
 namespace GUI
 {
     public partial class Form1 : Form
     {
+        private WinRarUnLocker WinRarUnLocker;
+        private delegate void SetTextCallback(string Message);
+
         private string archFileName;
         private string outputFolder;
-        private int totalTries;
-        private int curPositionPass;
+        private int _curPositionPass;
         private int prevPositionPass;
-        private List<char> alphabet;
-        private List<string> passGenArray;
-        private delegate void SetTextCallback(string Message);
+        private int passGenLength;
         private TimeSpan timeCounter;
         private DateTime initial_time;
         private ManualResetEvent stopWorkEvent;
+        
 
         public Form1()
         {
+            string specCharsString;
             InitializeComponent();
+
+            //get spec chars for label
+            WinRarUnLocker = new WinRarUnLocker(out specCharsString);
+
+            chbSpecSymb.Text += string.Concat("[", specCharsString, "]");
+
+            WinRarUnLocker.OnSomthingChanged += LogIt;
+
             openArchDialog.Filter = "Rar Files *.rar |*.rar"; 
         }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-
-        }
+ 
         private void SetText(string Message)
         {
-            Message = string.Concat(Message, "\r\n");
+ 
             if (lstFormsLog.InvokeRequired)
             {
                 SetTextCallback d = new SetTextCallback(SetText);
@@ -51,6 +58,10 @@ namespace GUI
                 lstFormsLog.Text += Message;
             }
         }
+        private void LogIt(object sender, string e)
+        {
+            SetText(string.Concat(e, "\r\n"));
+        }
         private void btnFileLoad_Click(object sender, EventArgs e)
         {
             if (openArchDialog.ShowDialog() == DialogResult.Cancel)
@@ -58,177 +69,122 @@ namespace GUI
             archFileName = openArchDialog.FileName;
             //string archFileText = System.IO.File.ReadAllText(filename);
             tbFilePath.Text = archFileName;
-            outputFolder = Path.GetDirectoryName(archFileName);
-            SetText(string.Format("File {0} open", archFileName));
+            LogIt(this, string.Format("File {0} open", archFileName));
         }
 
-        private bool UNLOCK(string fld, string pw, string outputfldr)
-        {
-            bool result = false;
-            var proc = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = @"C:\Program Files\WinRAR\UnRAR.exe",
-                    Arguments = string.Format("x -o+ -p{0} {1} {2}", pw, fld, outputfldr),
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    CreateNoWindow = true
-                }
-            };
-            proc.Start();
-            while (!proc.StandardOutput.EndOfStream)
-            {
-                string lines = proc.StandardOutput.ReadLine();
-                if (lines.Contains("All OK"))                    
-                   result = true;
-                
-            }
-            return result;
-        }
-        private async void PickUpPassword(string archiveName)
-        {
-            string pass=null;
-
-            for (int j = 0; j < passGenArray.Count; j++)
-            {
-                curPositionPass = j;
-                brTotalProgress.Value = j;
-                bool result = await Task.Factory.StartNew<bool>(
-                    () => UNLOCK(archiveName, passGenArray[j], outputFolder),
-                    TaskCreationOptions.LongRunning);
-                if (result)
-                {
-                    pass = passGenArray[j];
-                    SetText(string.Format("Total steps {0} pass {1} ", j, pass));
-                    FinishSuccessSearch(pass);
-                    FinishSearch();
-                    return; ;
-                }
-            }
-            FinishSearch();
-            SetText("Failure...");
-        }
-
-
-        private void btnRun_Click(object sender, EventArgs e)
-        {
-            btnClearAll_Click(this, new EventArgs());
-            btnRun.Enabled = false;
-            GenerateAlphbet(chbDigits.Checked,chbUpLeter.Checked, chbLowLeter.Checked);
-            GenerateHashArray(Int32.Parse(tbMinLength.Text), Int32.Parse(tbMaxLength.Text),alphabet);
-            SetText("Starting");
-            brTotalProgress.Maximum = passGenArray.Count;
-            SetText("Total passwords: " + passGenArray.Count);
- 
-            StartTimeCounter();
-            PickUpPassword(archFileName); 
-            
-        }
-        private void GenerateHashArray(int MinCount, int MaxCount, List<char> abc)
-        {
-            passGenArray = new List<string>();
-
-            for (int c = MinCount; c <= MaxCount; c++)
-            {
-                RecursiceFunc(null, MinCount, c);
-            }
-        }
-        private void RecursiceFunc(string prevPart, int iteration, int maxIteration)
-        {
-            string letter = null;
-            string pass = null;
-
-            for (int j = 0; j < alphabet.Count; j++)
-            {
-                letter = alphabet[j].ToString();
-                pass = string.Concat(prevPart, letter);
-                if (iteration == maxIteration)
-                {
-                    passGenArray.Add(pass);
-                }
-                else { 
-                    RecursiceFunc(pass, iteration + 1, maxIteration);
-                }
-            }
-        }
-        private void GenerateAlphbet(bool isNeedDigits, bool isNeedUpLetters, bool isNeedLowLetters)
-        {
-            alphabet = new List<char>();
-            if (isNeedUpLetters)
-            {
-                for (int i = 65; i < 91; i++)
-                {
-                    alphabet.Add((char)i);
-                }
-            }
-            if (isNeedLowLetters)
-            {
-                for (int i = 97; i < 122; i++)
-                {
-                    alphabet.Add((char)i);
-                }
-            }
-            if (isNeedDigits)
-            {
-                for (int i = 48; i < 58; i++)
-                {
-                    alphabet.Add((char)i);
-                }
-            }
-        }
 
         private void btnClearAll_Click(object sender, EventArgs e)
         {
-             lstFormsLog.Text = "";
+            lstFormsLog.Text = "";
         }
-        
-        private void FinishSuccessSearch(string pass)
+        private async void btnRun_Click(object sender, EventArgs e)
+        {
+            btnClearAll_Click(this, new EventArgs());
+
+            if (string.IsNullOrEmpty(tbFilePath.Text))
+            {
+                SetText("File path is null");                
+                return;
+            } 
+
+            btnRun.Enabled = false;
+            StartSearch();
+        }
+
+        private void btnStop_Click(object sender, EventArgs e)
+        {
+           FinishSearch();
+        }
+
+        public async void StartSearch()
+        {
+            brTotalProgress.Value = brTotalProgress.Minimum;
+            StartTimeCounter();
+
+            var curPositionPassProgress = new Progress<int>(s => _curPositionPass = s);
+            var progress = new Progress<int>(s => brTotalProgress.Value = s);
+            var result = new Progress<string>(s => tbFindPass.Text = s);
+            var c = new Progress<string>(s => tbFindPass.Text = s);
+
+            passGenLength = WinRarUnLocker.Initialize(
+                archFileName,
+                int.Parse(tbMinLength.Text),
+                int.Parse(tbMaxLength.Text),
+                chbDigits.Checked,
+                chbUpLeter.Checked,
+                chbLowLeter.Checked,
+                chbSpecSymb.Checked,
+                progress,
+                curPositionPassProgress);
+            brTotalProgress.Maximum = passGenLength;
+            
+            await WinRarUnLocker.PickUpPassword(archFileName, result);
+
+            FinishSearch();
+        }
+
+        public void FinishSearch()
         {
             brTotalProgress.Value = brTotalProgress.Maximum;
-            tbCurpass.Text = pass;
-            SetText("Success!");
             DeInitializeTimeCount();
-        }
-        private void FinishSearch()
-        {
+
             btnRun.Enabled = true;
         }
+
         private async void StartTimeCounter()
         {
-            var progress = new Progress<string>(s => tbTotalTime.Text = s);
-            string result = await Task.Factory.StartNew<string>(
-                () =>  InitializeTimeCount(progress),
-                TaskCreationOptions.LongRunning);
-            tbTotalTime.Text = result;
-           // lbSpeed.Text = (curPositionPass - prevPositionPass).ToString();
-         //   prevPositionPass = curPositionPass;
+            var timeProgress = new Progress<string>(s => tbTotalTime.Text = s);
+            var speedProgress = new Progress<string>(s => lbSpeed.Text = s);
+            var timeExpetedProgress = new Progress<string>(s => tbExpectedTime.Text = s);
+
+            await Task.Run(() => InitializeTimeCount(timeProgress, speedProgress, timeExpetedProgress));
         }
-        public string InitializeTimeCount(IProgress<string> progress)
+        public void InitializeTimeCount(IProgress<string> timeProgress, IProgress<string> speedProgress, IProgress<string> timeExpectedProgress)
         {
-            stopWorkEvent = new ManualResetEvent(false);
-            initial_time = DateTime.Now;
             string timeTick;
+            int curSpeed;
+            string curSpeedString;
+            int expectedTime;
+            string expectedTimeString = "";
 
-
+            stopWorkEvent = new ManualResetEvent(false);
+            
+            initial_time = DateTime.Now;
+             
             do
             {
-                timeTick = timer_Tick();
-                progress.Report(timeTick);
-            }
-            while (WaitHandle.WaitAny(new WaitHandle[] { stopWorkEvent }, 1) != 0);
+                //time 
+                timeCounter = DateTime.Now - initial_time;
+                timeTick = timeCounter.Hours.ToString("D2") + ":" + timeCounter.Minutes.ToString("D2") + ":" + timeCounter.Seconds.ToString("D2");
+                timeProgress.Report(timeTick);
 
-            return timeTick;
+                //speed
+                curSpeed = _curPositionPass - prevPositionPass;
+                prevPositionPass = _curPositionPass;
+                curSpeedString = curSpeed + " Pass/Sec";
+                speedProgress.Report(curSpeedString);
+
+                //expectedTime
+                if (curSpeed > 0)
+                {
+                    expectedTime = (passGenLength / curSpeed);
+                    expectedTimeString = TimeSpan.FromSeconds(expectedTime).ToString();
+                }
+                timeExpectedProgress.Report(expectedTimeString);
+
+            }
+            while (WaitHandle.WaitAny(new WaitHandle[] { stopWorkEvent }, 1000) != 0);
+
+            //  return timeTick;
         }
         public void DeInitializeTimeCount()
         {
             stopWorkEvent.Set();
         }
-        private string timer_Tick()
+
+        private void chbUpLeter_CheckedChanged(object sender, EventArgs e)
         {
-            DateTime current_time = DateTime.Now;
-            timeCounter = current_time - initial_time;
-            return timeCounter.Hours.ToString("D2") + ":" + timeCounter.Minutes.ToString("D2") + ":" + timeCounter.Seconds.ToString("D2");
-        } 
+
+        }
     }
 }

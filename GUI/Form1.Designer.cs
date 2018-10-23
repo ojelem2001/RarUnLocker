@@ -35,7 +35,7 @@
             this.brTotalProgress = new System.Windows.Forms.ProgressBar();
             this.lbFilePath = new System.Windows.Forms.Label();
             this.lstFormsLog = new System.Windows.Forms.TextBox();
-            this.tbCurpass = new System.Windows.Forms.TextBox();
+            this.tbFindPass = new System.Windows.Forms.TextBox();
             this.lbCurpass = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.tbMinLength = new System.Windows.Forms.TextBox();
@@ -50,6 +50,11 @@
             this.lbTotalTime = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.lbSpeed = new System.Windows.Forms.Label();
+            this.tbExpectedTime = new System.Windows.Forms.TextBox();
+            this.lbExpectedTime = new System.Windows.Forms.Label();
+            this.btnStop = new System.Windows.Forms.Button();
+            this.chbSpecSymb = new System.Windows.Forms.CheckBox();
+            this.tbox11 = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // openArchDialog
@@ -58,9 +63,9 @@
             // 
             // btnRun
             // 
-            this.btnRun.Location = new System.Drawing.Point(34, 321);
+            this.btnRun.Location = new System.Drawing.Point(35, 322);
             this.btnRun.Name = "btnRun";
-            this.btnRun.Size = new System.Drawing.Size(223, 37);
+            this.btnRun.Size = new System.Drawing.Size(223, 36);
             this.btnRun.TabIndex = 0;
             this.btnRun.Text = "Run";
             this.btnRun.UseVisualStyleBackColor = true;
@@ -107,18 +112,18 @@
             this.lstFormsLog.Size = new System.Drawing.Size(311, 317);
             this.lstFormsLog.TabIndex = 7;
             // 
-            // tbCurpass
+            // tbFindPass
             // 
-            this.tbCurpass.Enabled = false;
-            this.tbCurpass.Location = new System.Drawing.Point(10, 134);
-            this.tbCurpass.Name = "tbCurpass";
-            this.tbCurpass.Size = new System.Drawing.Size(149, 20);
-            this.tbCurpass.TabIndex = 8;
+            this.tbFindPass.Enabled = false;
+            this.tbFindPass.Location = new System.Drawing.Point(305, 410);
+            this.tbFindPass.Name = "tbFindPass";
+            this.tbFindPass.Size = new System.Drawing.Size(310, 20);
+            this.tbFindPass.TabIndex = 8;
             // 
             // lbCurpass
             // 
             this.lbCurpass.AutoSize = true;
-            this.lbCurpass.Location = new System.Drawing.Point(7, 118);
+            this.lbCurpass.Location = new System.Drawing.Point(219, 413);
             this.lbCurpass.Name = "lbCurpass";
             this.lbCurpass.Size = new System.Drawing.Size(78, 13);
             this.lbCurpass.TabIndex = 9;
@@ -170,7 +175,9 @@
             // chbDigits
             // 
             this.chbDigits.AutoSize = true;
-            this.chbDigits.Location = new System.Drawing.Point(14, 239);
+            this.chbDigits.Checked = true;
+            this.chbDigits.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chbDigits.Location = new System.Drawing.Point(13, 226);
             this.chbDigits.Name = "chbDigits";
             this.chbDigits.Size = new System.Drawing.Size(76, 17);
             this.chbDigits.TabIndex = 18;
@@ -180,17 +187,18 @@
             // chbUpLeter
             // 
             this.chbUpLeter.AutoSize = true;
-            this.chbUpLeter.Location = new System.Drawing.Point(14, 262);
+            this.chbUpLeter.Location = new System.Drawing.Point(13, 249);
             this.chbUpLeter.Name = "chbUpLeter";
             this.chbUpLeter.Size = new System.Drawing.Size(112, 17);
             this.chbUpLeter.TabIndex = 19;
             this.chbUpLeter.Text = "Upper letters [A-Z]";
             this.chbUpLeter.UseVisualStyleBackColor = true;
+            this.chbUpLeter.CheckedChanged += new System.EventHandler(this.chbUpLeter_CheckedChanged);
             // 
             // chbLowLeter
             // 
             this.chbLowLeter.AutoSize = true;
-            this.chbLowLeter.Location = new System.Drawing.Point(14, 285);
+            this.chbLowLeter.Location = new System.Drawing.Point(13, 272);
             this.chbLowLeter.Name = "chbLowLeter";
             this.chbLowLeter.Size = new System.Drawing.Size(109, 17);
             this.chbLowLeter.TabIndex = 20;
@@ -210,24 +218,24 @@
             // tbTotalTime
             // 
             this.tbTotalTime.Enabled = false;
-            this.tbTotalTime.Location = new System.Drawing.Point(192, 134);
+            this.tbTotalTime.Location = new System.Drawing.Point(12, 117);
             this.tbTotalTime.Name = "tbTotalTime";
-            this.tbTotalTime.Size = new System.Drawing.Size(56, 20);
+            this.tbTotalTime.Size = new System.Drawing.Size(69, 20);
             this.tbTotalTime.TabIndex = 22;
             // 
             // lbTotalTime
             // 
             this.lbTotalTime.AutoSize = true;
-            this.lbTotalTime.Location = new System.Drawing.Point(195, 118);
+            this.lbTotalTime.Location = new System.Drawing.Point(9, 101);
             this.lbTotalTime.Name = "lbTotalTime";
-            this.lbTotalTime.Size = new System.Drawing.Size(56, 13);
+            this.lbTotalTime.Size = new System.Drawing.Size(70, 13);
             this.lbTotalTime.TabIndex = 23;
-            this.lbTotalTime.Text = "Total time:";
+            this.lbTotalTime.Text = "Time passed:";
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(13, 401);
+            this.label4.Location = new System.Drawing.Point(13, 413);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(41, 13);
             this.label4.TabIndex = 24;
@@ -236,16 +244,66 @@
             // lbSpeed
             // 
             this.lbSpeed.AutoSize = true;
-            this.lbSpeed.Location = new System.Drawing.Point(60, 401);
+            this.lbSpeed.Location = new System.Drawing.Point(60, 413);
             this.lbSpeed.Name = "lbSpeed";
             this.lbSpeed.Size = new System.Drawing.Size(0, 13);
             this.lbSpeed.TabIndex = 25;
+            // 
+            // tbExpectedTime
+            // 
+            this.tbExpectedTime.Enabled = false;
+            this.tbExpectedTime.Location = new System.Drawing.Point(94, 117);
+            this.tbExpectedTime.Name = "tbExpectedTime";
+            this.tbExpectedTime.Size = new System.Drawing.Size(74, 20);
+            this.tbExpectedTime.TabIndex = 26;
+            // 
+            // lbExpectedTime
+            // 
+            this.lbExpectedTime.AutoSize = true;
+            this.lbExpectedTime.Location = new System.Drawing.Point(91, 101);
+            this.lbExpectedTime.Name = "lbExpectedTime";
+            this.lbExpectedTime.Size = new System.Drawing.Size(77, 13);
+            this.lbExpectedTime.TabIndex = 27;
+            this.lbExpectedTime.Text = "Expected time:";
+            // 
+            // btnStop
+            // 
+            this.btnStop.Location = new System.Drawing.Point(386, 3);
+            this.btnStop.Name = "btnStop";
+            this.btnStop.Size = new System.Drawing.Size(102, 32);
+            this.btnStop.TabIndex = 28;
+            this.btnStop.Text = "Stop";
+            this.btnStop.UseVisualStyleBackColor = true;
+            this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
+            // 
+            // chbSpecSymb
+            // 
+            this.chbSpecSymb.AutoSize = true;
+            this.chbSpecSymb.Location = new System.Drawing.Point(12, 295);
+            this.chbSpecSymb.Name = "chbSpecSymb";
+            this.chbSpecSymb.Size = new System.Drawing.Size(101, 17);
+            this.chbSpecSymb.TabIndex = 29;
+            this.chbSpecSymb.Text = "Special symbols";
+            this.chbSpecSymb.UseVisualStyleBackColor = true;
+            // 
+            // tbox11
+            // 
+            this.tbox11.Enabled = false;
+            this.tbox11.Location = new System.Drawing.Point(195, 117);
+            this.tbox11.Name = "tbox11";
+            this.tbox11.Size = new System.Drawing.Size(74, 20);
+            this.tbox11.TabIndex = 30;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(628, 422);
+            this.ClientSize = new System.Drawing.Size(628, 435);
+            this.Controls.Add(this.tbox11);
+            this.Controls.Add(this.chbSpecSymb);
+            this.Controls.Add(this.btnStop);
+            this.Controls.Add(this.lbExpectedTime);
+            this.Controls.Add(this.tbExpectedTime);
             this.Controls.Add(this.lbSpeed);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.lbTotalTime);
@@ -260,7 +318,7 @@
             this.Controls.Add(this.tbMinLength);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.lbCurpass);
-            this.Controls.Add(this.tbCurpass);
+            this.Controls.Add(this.tbFindPass);
             this.Controls.Add(this.lstFormsLog);
             this.Controls.Add(this.lbFilePath);
             this.Controls.Add(this.brTotalProgress);
@@ -269,7 +327,6 @@
             this.Controls.Add(this.btnRun);
             this.Name = "Form1";
             this.Text = "RarUnlocker";
-            this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -284,7 +341,7 @@
         private System.Windows.Forms.ProgressBar brTotalProgress;
         private System.Windows.Forms.Label lbFilePath;
         private System.Windows.Forms.TextBox lstFormsLog;
-        private System.Windows.Forms.TextBox tbCurpass;
+        private System.Windows.Forms.TextBox tbFindPass;
         private System.Windows.Forms.Label lbCurpass;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox tbMinLength;
@@ -299,6 +356,11 @@
         private System.Windows.Forms.Label lbTotalTime;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label lbSpeed;
+        private System.Windows.Forms.TextBox tbExpectedTime;
+        private System.Windows.Forms.Label lbExpectedTime;
+        private System.Windows.Forms.Button btnStop;
+        private System.Windows.Forms.CheckBox chbSpecSymb;
+        private System.Windows.Forms.TextBox tbox11;
     }
 }
 

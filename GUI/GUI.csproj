@@ -79,5 +79,11 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\WinRar_unlocker\WinRar_unlocker.csproj">
+      <Project>{556E93C4-7208-40E0-B51B-6B28CE25356B}</Project>
+      <Name>WinRar_unlocker</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
